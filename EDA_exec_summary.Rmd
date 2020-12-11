@@ -1,0 +1,156 @@
+---
+title: "EDA Executive Summary"
+subtitle: "Data Science I (STAT 301-1)"
+author: "Diego Williams"
+date: "December 6^th^, 2020"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    highlight: "tango"
+editor_options: 
+  chunk_output_type: console
+---
+
+
+## **Introduction**
+
+For this project, I will be conducting an exploratory data analysis (EDA) using the datasets provided by the National Highway Traffic Safety Administration (NHTSA). These datasets, organized under two systems, are all oriented around capturing the available information on motor vehicle traffic accidents in the United States during a given year. Both systems were most recently updated in 2018, and stretch back as far as the early 1970s. However, for the purpose of this EDA, I will be focusing on the data system known as the Crash Report Sampling System (CRSS). Moreover, I will be focusing solely on the data collected during the year 2018, as the NHTSA made a large number of changes to the variables monitored under the CRSS beginning with that year's data.
+
+<br><br>
+
+### The CRSS Data Environment
+
+The NHTSA maintains the CRSS data system in order to equip researchers with the information they need in order to "estimate the overall crash picture", "identify highway safety problem[s]", and "form the basis for cost and benefit analyses of highway safety initiatives and regulations" (NHTSA, 2020). The CRSS itself consists of "police-reported crashes" involving "all types of motor vehicles [and] pedestrians" (NHTSA, 2020).
+
+However, it is worth noting that the CRSS is not structured as a singular dataset. Instead, it is described by the NHTSA as its own "data environment", with multiple different "data items" stored within (NHTSA, 2020). For the purpose of this EDA, I will be referring to these individual datasets as "data items" as to avoid any confusion. Ultimately, each different data item represents a different perspective of the information captured within the CRSS. Although a more thorough data cleaning process is required in order to draw from multiple data items at once, each perspective offers its own unique insights. As such, this EDA walks through four of the most important data items, which have been cleaned and renamed as the `accidents`, `people` and `vehicles` data items (there is also the `distractions` data item, which is joined with the `people` data item when it is relevant to the EDA).
+
+<br><br>
+
+### Collection and Cleaning Summary
+
+In order to collect the CRSS data items, they were downloaded as .csv files directly from the NHTSA's website at the following link:
+
+[Link to the NHTSA website, where the CRSS data can be accessed: https://www.nhtsa.gov/content/nhtsa-ftp/221](https://www.nhtsa.gov/content/nhtsa-ftp/221)
+
+Ultimately, the data cleaning and processing steps of this EDA resulted in four different tidy datasets: `accidents_cleaned`, `distractions_cleaned`, `people_cleaned`, and `vehicles_cleaned`. All four are also saved within the `processed` folder in the `data` folder (as .rds) files corresponding to this EDA. We will move through each item individually, and will explore the insights they have to offer.
+
+<br><br>
+
+### Load Packages
+Below, for the sake of transparency and reproducibility, I have listed out the packages I used throughout this EDA: 
+```{r load-packages, message=FALSE, warning=FALSE}
+# Loading package(s)
+library(tidyverse)
+library(lubridate)
+library(janitor)
+# Code Included Deliberately
+```
+
+```{r load-data, load-packages, message=FALSE, echo=FALSE}
+## Loading the .rds files from the `processed` directory
+accidents_cleaned <- read_rds("data/processed/accidents_cleaned.rds")
+
+distractions_cleaned <- read_rds("data/processed/distractions_cleaned.rds")
+
+people_cleaned <- read_rds("data/processed/people_cleaned.rds")
+
+vehicles_cleaned <- read_rds("data/processed/vehicles_cleaned.rds")
+```
+
+<br><br>
+
+## Highlight #1: Impact of `Light_Conditions` and `Time` on `Accident` Volume
+
+It would be reasonable to assume that `light_con`ditions would play an important role when it comes to whether or not an accident occurs. Moreover, it would be interesting to also take the `time` of day into consideration, given the close relationship between the two variables. Below, we can see a histogram where each bin corresponds to a 30-minute period in the day, and the color aesthetic is assigned to the reported `light_con`dition.
+
+```{r exec-1, message=FALSE, warning=FALSE, echo=FALSE}
+ggplot(accidents_cleaned) +
+  geom_histogram(aes(x = time, fill = light_con), bins = 48) +
+  annotate("rect", xmin = 21600, xmax = 36000, ymin = 0, ymax = Inf,
+           alpha = .2) +
+  annotate("rect", xmin = 54000, xmax = 68400, ymin = 0, ymax = Inf, 
+           alpha = .2) +
+  labs(x = "Time of Accident", y = "Count", fill = "Reported Light Condition")
+```
+
+Interestingly enough, the vast majority of accidents took place under the `Daylight` lighting category. However, during the extreme early and late hours of the day, there were many accidents which also occurred under the `Dark - Lighted` lighting category. This makes sense, given the abundance of light available along most popular driving routes.
+
+Turing our attention towards the `time` of accident, we can observe two sharp peaks emerging towards the center of each shaded region. In the visualization above, the two shaded regions also correspond with "rush hour", which is typically associated with the periods of time between 6:00 - 10:00 and 15:00 - 19:00. As such, it makes sense that the two peaks would emerge during these two periods. Generally though, the highest volume of accidents corresponds with the later half of the day (after noon).
+ 
+<br><br>
+
+## Highlight #2: Segmenting the Distribution of `Injuries` by `Person Type`
+
+Below is a series of faceted visualizations depicting the distribution of injury types for each of the most important `person_type`s in the `people_cleaned` data item.
+
+```{r exec-2, message=FALSE, warning=FALSE, echo=FALSE}
+people_cleaned %>% 
+  mutate(injury_sev = fct_infreq(injury_sev)) %>% 
+  filter(person_type != "Persons on Personal Conveyances",
+         person_type != "Unknown in a Motor Vehicle in Transport",
+         person_type != "Other Cyclist ",
+         person_type != "Persons in or on Buildings") %>%
+  count(person_type, injury_sev) %>% 
+  group_by(person_type) %>% 
+  mutate(prop = n/sum(n)) %>% 
+  ggplot() +
+  geom_col(aes(x = injury_sev, y = prop)) +
+  facet_wrap(~person_type) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(x = "Injury Severity", y = "Proportion of Total Injuries")
+```
+
+Unlike some of the other faceted plots built throughout this EDA, this one presents us with a stark visual difference between the distributions of injuries. When it comes to the `person_type`s which were inside of a vehicle ("Driver of a Motor Vehicle in Transport", "Occupant of a Motor Vehicle Not in Transport", and "Passenger of a Motor Vehicle in Transport"), the distribution of injuries is more in-line with what we observe for the dataset at large. In these instances, the vast majority of individuals walk away from the accident without any reported injuries, or a infrequently a minor injury. However, when we look at the `person_type`s which were outside of a vehicle (Bicyclist", "Other Cyclist", "Pedestrian"), the distribution of injuries is far more severe. These individuals had a larger proportion of possible minor and serious injuries, and sometimes fatalities, than their counterparts which were in vehicles.
+ 
+<br><br>
+
+## Highlight #3: Looking at `Maximum Injury Severity` by `Vehicle Make`
+
+The `vehicles_cleaned` data item offers us an alternative view of the CRSS data universe. Looking at each individual `vehicle` and additional vehicle-specific details, we can pull some new insights from the CRSS data. Moreover, we can pull more granular, specific data about each crash using this perspective.
+
+One of the most significant advantages of skimming through the `vehicles_cleaned` data item is that it offers information on the `vehicle_make` of each vehicle in the CRSS data environment. In the following portion of this EDA, we will visualize the relationship between `vehicle_make` and `vehicle_max_sev` (the injury of the maximum severity which occurred within the vehicle during a given crash).
+
+In the visualization below, we can see the distribution of injury types scattered among the top 20 most common `vehicle_make`s.
+
+```{r exec-3, message=FALSE, warning=FALSE, echo=FALSE}
+# Creating the list for the top 20 makes for joining purposes
+top_20_makes <- vehicles_cleaned %>% 
+  group_by(vehicle_make) %>% 
+  summarize(n = n()) %>% 
+  mutate(prop = n/sum(n)) %>% 
+  arrange(desc(n)) %>% 
+  slice_head(n = 20) %>% 
+  select(vehicle_make)
+
+# geom_tile() with top 20 makes
+vehicles_cleaned %>% 
+  inner_join(top_20_makes, by = "vehicle_make") %>% 
+  mutate(vehicle_max_sev = fct_infreq(vehicle_max_sev)) %>% 
+  count(vehicle_make, vehicle_max_sev) %>% 
+  group_by(vehicle_make) %>% 
+  mutate(prop_for_make = n/sum(n)) %>% 
+  ggplot(aes(x = vehicle_max_sev, y = vehicle_make)) +
+  geom_tile(aes(fill = prop_for_make)) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(x = "Maximum Injury Severity Per Vehicle", y = "Vehicle Make", fill = "Proportion of Injuries per Make")
+```
+
+It is surprising to see a consistent pattern across all `vehicle_make`s. I had initially suspected that perhaps there would be a number of `vehicle_make`s that offer more protection or might happen to be safer, but it is clear that this is not the case. There is very little difference between the different `vehicle_make`s from what we have seen in this data item thus far. Overall, there tends to be more instances of individuals walking away from these vehicles unharmed than anything else.
+ 
+<br><br>
+
+
+## **Conclusion**
+
+### Project Relevance
+
+All in all, this data represents a part of a broader shift towards the greater utilization and awareness of data when it comes to transportation and insurance in general. Improved access and familiarity with datasets such as the data systems produced by the NHTSA has enabled companies to shift away from traditional underwriting practices, which involve controversial variables, to data that is directly related to an individual’s driving ability and history. Moreover, these datasets are relevant given the advent of autonomous vehicles on the open road.
+
+<br><br>
+
+### Next Steps
+
+Despite my best attempts to thoroughly explore the different aspects of the CRSS data environment, there are still insights left for others to unearth. Exploring the data items I left untouched, related to parked vehicles and other subjects, could also be worth exploring. Lastly, it would be worthwhile revisiting this EDA with the purpose of restructuring and optimizing the data cleaning process.
+
+<br><br>

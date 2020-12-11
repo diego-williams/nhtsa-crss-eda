@@ -1,0 +1,84 @@
+--------------------
+EDA Data Codebook
+Diego Williams
+STAT 310-1
+--------------------
+THE CRSS DATA UNIVERSE
+----------
+The Crash Report Sampling System (CRSS) is a sample of "police-reported
+crashes" involving "all types of motor vehicles [and] pedestrians" (NHTSA, 2020).
+The CRSS was created by the  Highway Traffic Safety Administration (NHTSA)
+in order to equip researchers with the information they need in order to
+"estimate the overall crash picture", "identify highway safety problem[s]",
+and "form the basis for cost and benefit analyses of highway safety
+initiatives and regulations" (NHTSA, 2020).
+
+The CRSS data corresponding to the year 2018 was downloaded directly from the
+official NHTSA website (in .csv format). The CRSS itself is a 'data universe',
+with several different 'data items' that adopt different perspectives of the
+events described in the CRSS. In this document, an overview of the final, cleaned
+version of each relevant 'data item' is provided.
+
+LINK TO ACCESS THE ORIGINAL CRSS DATA:
+https://www.nhtsa.gov/content/nhtsa-ftp/221
+--------------------
+THE FINAL, CLEANED DATA ITEMS:
+----------
+1) 'accidents_cleaned'
+----------
+2) 'distractions_cleaned'
+----------
+3) 'people_cleaned'
+----------
+4) 'vehicles_cleaned'
+--------------------
+EACH ITEM (SAVED AS .RDS FILES IN THE 'PROCESSED' FOLDER), EXPLAINED
+(NOTE: all variable values are drawn from the police report for each crash)
+----------
+'accidents_cleaned':
+-----
+case_num: unique case number assigned to each crash
+region: the region of the country where the crash occurred
+num_vehicles: the reported number of motor vehicles involved in the crash
+num_inj: the number of persons injured in the crash
+month: month of crash
+wday: weekday of crash
+crash_max_sev: the single most severe injury of all persons involved in the crash
+manner_coll: the orientation of the vehicles when they were involved in the crash
+light_con: the type/level of light that existed at the time of the crash
+weather: the prevailing atmospheric conditions that existed at the time of the crash
+time: time of the crash (HH:MM:00)
+----------
+'distractions_cleaned':
+-----
+case_num: unique case number assigned to each crash
+vehicle_num: the consecutive number assigned to each vehicle in the case
+driver_distraction: the attribute(s) which best describe this driver’s
+attention to driving prior to the crash
+----------
+'people_cleaned':
+-----
+case_num: unique case number assigned to each crash
+vehicle_num: the consecutive number assigned to each vehicle in the case
+person_num:  the consecutive number assigned to each person in the case
+age: this person's age at the time of the crash, in years
+sex: the sex of this person involved in the crash
+person_type: the role of this person involved in the crash
+injury_sev: the severity of the injury to this person in the crash
+
+----------
+'vehicles_cleaned':
+-----
+case_num: unique case number assigned to each crash
+vehicle_num: the consecutive number assigned to each vehicle in the case
+num_occs: the reported number of occupants within this specific vehicle
+manner_coll: the reported manner of collision
+vehicle_make: the make (manufacturer) of this vehicle
+vehicle_mod_yr: the manufacturer's model year of this vehicle
+speed: the speed the vehicle was traveling prior to the occurrence of the crash
+initial_impact: the area on this vehicle that produced the first instance 
+of injury to non-motorists or occupants of this vehicle
+dmg_extent: the amount of damage sustained by this vehicle
+vehicle_max_sev: the event that resulted in the most severe injury or, if
+no injury, the greatest property damage involving this vehicle
+--------------------
